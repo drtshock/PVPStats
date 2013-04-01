@@ -34,26 +34,27 @@ public class PVPStats extends JavaPlugin {
 
 	private final PSListener entityListener = new PSListener(this);
 	final PSPAListener paListener = new PSPAListener(this);
-	
+
 	public void onEnable() {
 		PluginDescriptionFile pdfFile = getDescription();
-		
+
 		PluginManager pm = getServer().getPluginManager();
 		pm.registerEvents(entityListener, this);
-		
+
 		load_config();
 		load_hooks();
-		
+
 		if (paHandler != null) {
 			getLogger().info("registering PVP Arena events");
 			pm.registerEvents(paListener, this);
 		}
-		
-		UpdateManager.updateCheck(this);
-		
+
+		if(getConfig().getBoolean("check-updates"))
+			UpdateManager.updateCheck(this);
+
 		getLogger().info("enabled. (version " + pdfFile.getVersion() + ")");
 	}
-	
+
 	private void load_hooks() {
 		Plugin pa = getServer().getPluginManager().getPlugin("pvparena");
 		if (pa != null && pa.isEnabled()) {
@@ -63,13 +64,13 @@ public class PVPStats extends JavaPlugin {
 	}
 
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
-		if (!commandLabel.equals("pvpstats"))
+		if (!commandLabel.equalsIgnoreCase("pvpstats") || !commandLabel.equalsIgnoreCase("stats"))
 			return true;
-		
+
 		if (args == null || args.length < 1 || !args[0].equalsIgnoreCase("reload")) {
 			return parsecommand(sender, args);
 		}
-		
+
 		try {
 			Player p = (Player) sender;
 			if (!p.isOp() && !p.hasPermission("pvpstats.reload")) {
@@ -79,18 +80,18 @@ public class PVPStats extends JavaPlugin {
 		} catch (Exception e) {
 			// nothing
 		}
-		
+
 		if (args[0].equalsIgnoreCase("reload")) {
 			load_config();
 		} else {
 			return false; // show command
 		}
-		
+
 		sender.sendMessage("[PVP Stats] config reloaded!");
-		
+
 		return true;
 	}
-	
+
 	private boolean parsecommand(CommandSender sender, String[] args) {
 		if (args == null || args.length < 1) {
 			String[] info = PSMySQL.info(sender.getName());
@@ -130,26 +131,26 @@ public class PVPStats extends JavaPlugin {
 		saveConfig();
 
 		// get variables from settings handler
- 		if (getConfig().getBoolean("MySQL", false)) {
- 			this.MySQL = getConfig().getBoolean("MySQL", false);
- 			this.dbHost = getConfig().getString("MySQLhost", "");
- 			this.dbUser = getConfig().getString("MySQLuser", "");
- 			this.dbPass = getConfig().getString("MySQLpass", "");
- 			this.dbDatabase = getConfig().getString("MySQLdb", "");
- 			this.dbPort = getConfig().getInt("MySQLport", 3306);
- 		}
- 		
- 		// Check Settings
- 		if (this.MySQL) {
- 			if (this.dbHost.equals("")) { this.MySQL = false;  }
- 			else if (this.dbUser.equals("")) { this.MySQL = false; }
- 			else if (this.dbPass.equals("")) { this.MySQL = false; }
- 			else if (this.dbDatabase.equals("")) { this.MySQL = false; }
- 		}
- 		
- 		// Enabled SQL/MySQL
- 		if (this.MySQL) {
- 			// Declare MySQL Handler
+		if (getConfig().getBoolean("MySQL", false)) {
+			this.MySQL = getConfig().getBoolean("MySQL", false);
+			this.dbHost = getConfig().getString("MySQLhost", "");
+			this.dbUser = getConfig().getString("MySQLuser", "");
+			this.dbPass = getConfig().getString("MySQLpass", "");
+			this.dbDatabase = getConfig().getString("MySQLdb", "");
+			this.dbPort = getConfig().getInt("MySQLport", 3306);
+		}
+
+		// Check Settings
+		if (this.MySQL) {
+			if (this.dbHost.equals("")) { this.MySQL = false;  }
+			else if (this.dbUser.equals("")) { this.MySQL = false; }
+			else if (this.dbPass.equals("")) { this.MySQL = false; }
+			else if (this.dbDatabase.equals("")) { this.MySQL = false; }
+		}
+
+		// Enabled SQL/MySQL
+		if (this.MySQL) {
+			// Declare MySQL Handler
 			try {
 				sqlHandler = new lib.JesiKat.SQL.MySQLConnection(dbHost, dbPort, dbDatabase, dbUser,
 						dbPass);
@@ -160,35 +161,30 @@ public class PVPStats extends JavaPlugin {
 			} catch (ClassNotFoundException e1) {
 				e1.printStackTrace();
 			}
- 			
-			getLogger().info("MySQL Initializing");
- 			// Initialize MySQL Handler
- 			
- 				if (sqlHandler.connect(true)) {
- 					getLogger().info("MySQL connection successful");
- 	 				// Check if the tables exist, if not, create them
- 					if (!sqlHandler.tableExists(dbDatabase,"pvpstats")) {
- 						getLogger().info("Creating table pvpstats");
- 						String query = "CREATE TABLE `pvpstats` ( `id` int(5) NOT NULL AUTO_INCREMENT, `name` varchar(42) NOT NULL, `kills` int(8), `deaths` int(8), PRIMARY KEY (`id`) ) AUTO_INCREMENT=1 ;";
- 						try {
- 							sqlHandler.executeQuery(query, true);
- 						} catch (SQLException e) {
- 							e.printStackTrace();
- 						}
- 					}
- 				} else {
- 					getLogger().severe("MySQL connection failed");
- 					this.MySQL = false;
- 				}
- 			PSMySQL.plugin = this;
- 		} else {
- 			Bukkit.getServer().getPluginManager().disablePlugin(this);
-		}
-	}
 
-	public void onDisable() {
-		PluginDescriptionFile pdfFile = getDescription();
-		getLogger().info("disabled. (version " + pdfFile.getVersion() + ")");
+			getLogger().info("MySQL Initializing");
+			// Initialize MySQL Handler
+
+			if (sqlHandler.connect(true)) {
+				getLogger().info("MySQL connection successful");
+				// Check if the tables exist, if not, create them
+				if (!sqlHandler.tableExists(dbDatabase,"pvpstats")) {
+					getLogger().info("Creating table pvpstats");
+					String query = "CREATE TABLE `pvpstats` ( `id` int(5) NOT NULL AUTO_INCREMENT, `name` varchar(42) NOT NULL, `kills` int(8), `deaths` int(8), PRIMARY KEY (`id`) ) AUTO_INCREMENT=1 ;";
+					try {
+						sqlHandler.executeQuery(query, true);
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+				}
+			} else {
+				getLogger().severe("MySQL connection failed");
+				this.MySQL = false;
+			}
+			PSMySQL.plugin = this;
+		} else {
+			Bukkit.getServer().getPluginManager().disablePlugin(this);
+		}
 	}
 
 }

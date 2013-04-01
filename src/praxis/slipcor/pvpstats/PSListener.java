@@ -21,13 +21,13 @@ import org.bukkit.event.server.PluginEnableEvent;
 
 public class PSListener implements Listener {
 	public PVPStats plugin;
-	
+
 	private HashMap<String, String> lastKill = new HashMap<String, String>();
 
 	public PSListener(PVPStats instance) {
 		this.plugin = instance;
 	}
-	
+
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		Player player = event.getPlayer();
@@ -37,7 +37,7 @@ public class PSListener implements Listener {
 		}
 		UpdateManager.message(player);
 	}
-	
+
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onEntityDeath(PlayerDeathEvent event) {
 
@@ -47,20 +47,20 @@ public class PSListener implements Listener {
 
 		Player attacker = event.getEntity().getKiller();
 		Player player = event.getEntity();
-		
+
 		if (plugin.getConfig().getBoolean("checkabuse")) {
-			
+
 			if (lastKill.containsKey(attacker.getName()) && lastKill.get(attacker.getName()).equals(player.getName())) {
 				return; // no logging!
 			}
-			
+
 			lastKill.put(attacker.getName(), player.getName());
 		}
 		// here we go, PVP!
 		PSMySQL.incDeath(player);
 		PSMySQL.incKill(attacker);
 	}
-	
+
 	@EventHandler
 	public void onPluginEnable(PluginEnableEvent event) {
 		if (plugin.paHandler != null || !plugin.getConfig().getBoolean("PVPArena")) {

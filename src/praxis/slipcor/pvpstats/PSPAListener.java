@@ -21,12 +21,12 @@ public class PSPAListener implements Listener {
 	public PSPAListener(PVPStats instance) {
 		this.plugin = instance;
 	}
-	
+
 	@EventHandler
 	public void onArenaKill(PAKillEvent event) {
 		PSMySQL.incKill(event.getPlayer());
 	}
-	
+
 	@EventHandler
 	public void onArenaDeath(PADeathEvent event) {
 		if (!event.isPVP()) {

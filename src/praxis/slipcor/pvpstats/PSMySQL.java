@@ -61,12 +61,11 @@ public class PSMySQL {
 	private static void checkAndDo(String sPlayer, boolean kill) {
 		if (!mysqlExists("SELECT * FROM `pvpstats` WHERE `name` = '" + sPlayer
 				+ "';")) {
-			mysqlQuery("INSERT INTO `pvpstats` (`name`,`kills`,`deaths`) VALUES ('"
-					+ sPlayer + "', 0, 0)");
+			mysqlQuery("INSERT INTO `pvpstats` (`name`,`kills`,`deaths`,`streak`) VALUES ('"
+					+ sPlayer + "', 0, 0, 0)");
 		}
 		String var = kill ? "kills" : "deaths";
-		mysqlQuery("UPDATE `pvpstats` SET `" + var + "` = `" + var
-				+ "`+1 WHERE `name` = '" + sPlayer + "'");
+		mysqlQuery("UPDATE `pvpstats` SET `" + var + "` = `" + var + "`+1 WHERE `name` = '" + sPlayer + "'");
 	}
 
 	public static String[] top(int count) {
@@ -178,7 +177,7 @@ public class PSMySQL {
 		if (output != null) {
 			return output;
 		}
-		
+
 		output = new String[1];
 		output[0] = "Player not found: "+ string;
 		return output;
